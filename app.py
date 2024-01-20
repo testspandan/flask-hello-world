@@ -35,6 +35,7 @@ def generate_audio():
         
         text_chunks = split_text(text, chunk_size)
         audio_paths = []
+        chunk_audio_urls = {}
         
         for i, chunk in enumerate(text_chunks):
             audio_data = generate(text=chunk, voice=voice, model='eleven_multilingual_v1')
@@ -44,6 +45,7 @@ def generate_audio():
                 wf.write(audio_data)
             
             audio_paths.append(audio_file_path)
+            chunk_audio_urls[f'chunk_{i}_url'] = f'https://audioapi.spandanpokhrel.com.np/get_audio/{audio_file_path}'
         
         # Combine audio paths into a single audio file
         combined_audio_path = "combined_audio.wav"
@@ -53,8 +55,13 @@ def generate_audio():
         else:
             combined_audio_path = audio_paths[0]  # Use the single audio path if there's only one chunk
         
-        # Return the path to the combined audio file
-        return jsonify({'audio_url': f'https://audioapi.spandanpokhrel.com.np/get_audio/{combined_audio_path}'})
+        # Return the paths to individual and combined audio files
+        response = {
+            'chunk_audio_urls': chunk_audio_urls,
+            'combined_audio_url': f'https://audioapi.spandanpokhrel.com.np/get_audio/{combined_audio_path}'
+        }
+        
+        return jsonify(response)
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
