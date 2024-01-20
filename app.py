@@ -49,8 +49,14 @@ def generate_audio():
         combined_audio_path = "combined_audio.wav"
         os.system(f"sox {' '.join(audio_paths)} {combined_audio_path}")
         
-        # Return the path to the combined audio file
-        return jsonify({'audio_url': f'https://audioapi.spandanpokhrel.com.np/get_audio/{combined_audio_path}'})
+        # Return the paths to individual and combined audio files
+        audio_urls = {
+            f'chunk_{i}_url': f'https://audioapi.spandanpokhrel.com.np/get_audio/generated_audio_{i}.wav'
+            for i in range(len(text_chunks))
+        }
+        audio_urls['combined_url'] = f'https://audioapi.spandanpokhrel.com.np/get_audio/{combined_audio_path}'
+        
+        return jsonify(audio_urls)
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
