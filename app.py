@@ -23,7 +23,7 @@ def generate_audio():
             wf.write(audio_data)
 
         # Return the path to the hosted audio file
-        return jsonify({'audio_url': f'https://spandan-pceu.onrender.com/get_audio/{audio_file_path}'})
+        return jsonify({'audio_url': f'https://audioapi.spandanpokhrel.com.np/get_audio/{audio_file_path}'})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
