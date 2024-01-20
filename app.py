@@ -11,13 +11,13 @@ def index():
 @app.route('/generate_audio', methods=['POST'])
 def generate_audio():
     try:
-        # Get the text from the POST request
+        
         text = request.json.get('text')
+        voice = request.json.get('voice')
+        #voice=Arnold
+        audio_data = generate(text=text, voice=voice, model='eleven_multilingual_v1')
 
-        # Generate audio using elevenlabs
-        audio_data = generate(text=text, voice="Arnold", model='eleven_multilingual_v1')
-
-        # Save the audio data to a WAV file
+        
         audio_file_path = "generated_audio.wav"
         with open(audio_file_path, 'wb') as wf:
             wf.write(audio_data)
