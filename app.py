@@ -20,7 +20,7 @@ def split_text(text, chunk_size):
     if text:
         chunks.append(text.strip())
     
-    return chunks
+    return chunks if chunks else [text]  # If the text is shorter than chunk_size, return the entire text as a single chunk
 
 @app.route('/')
 def index():
@@ -47,16 +47,14 @@ def generate_audio():
         
         # Combine audio paths into a single audio file
         combined_audio_path = "combined_audio.wav"
-        os.system(f"sox {' '.join(audio_paths)} {combined_audio_path}")
         
-        # Return the paths to individual and combined audio files
-        audio_urls = {
-            f'chunk_{i}_url': f'https://audioapi.spandanpokhrel.com.np/get_audio/generated_audio_{i}.wav'
-            for i in range(len(text_chunks))
-        }
-        audio_urls['combined_url'] = f'https://audioapi.spandanpokhrel.com.np/get_audio/{combined_audio_path}'
+        if len(audio_paths) > 1:
+            os.system(f"sox {' '.join(audio_paths)} {combined_audio_path}")
+        else:
+            combined_audio_path = audio_paths[0]  # Use the single audio path if there's only one chunk
         
-        return jsonify(audio_urls)
+        # Return the path to the combined audio file
+        return jsonify({'audio_url': f'https://audioapi.spandanpokhrel.com.np/get_audio/{combined_audio_path}'})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
