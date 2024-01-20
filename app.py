@@ -4,6 +4,24 @@ import os
 
 app = Flask(__name__)
 
+def split_text(text, chunk_size):
+    chunks = []
+    while len(text) > chunk_size:
+        nearest_period = text.rfind('.', 0, chunk_size)
+        nearest_purna_biram = text.rfind('।', 0, chunk_size)  # "purna biram" in Nepali
+        nearest_split = max(nearest_period, nearest_purna_biram)
+        
+        if nearest_split == -1:
+            nearest_split = chunk_size
+        
+        chunks.append(text[:nearest_split + 1].strip())
+        text = text[nearest_split + 1:]
+    
+    if text:
+        chunks.append(text.strip())
+    
+    return chunks
+
 @app.route('/')
 def index():
     return 'Hello from Flask!'
@@ -11,19 +29,28 @@ def index():
 @app.route('/generate_audio', methods=['POST'])
 def generate_audio():
     try:
-        
         text = request.json.get('text')
         voice = request.json.get('voice')
-        #voice=Arnold
-        audio_data = generate(text=text, voice=voice, model='eleven_multilingual_v1')
-
+        chunk_size = 250
         
-        audio_file_path = "generated_audio.wav"
-        with open(audio_file_path, 'wb') as wf:
-            wf.write(audio_data)
-
-        # Return the path to the hosted audio file
-        return jsonify({'audio_url': f'https://audioapi.spandanpokhrel.com.np/get_audio/{audio_file_path}'})
+        text_chunks = split_text(text, chunk_size)
+        audio_paths = []
+        
+        for i, chunk in enumerate(text_chunks):
+            audio_data = generate(text=chunk, voice=voice, model='eleven_multilingual_v1')
+            audio_file_path = f"generated_audio_{i}.wav"
+            
+            with open(audio_file_path, 'wb') as wf:
+                wf.write(audio_data)
+            
+            audio_paths.append(audio_file_path)
+        
+        # Combine audio paths into a single audio file
+        combined_audio_path = "combined_audio.wav"
+        os.system(f"sox {' '.join(audio_paths)} {combined_audio_path}")
+        
+        # Return the path to the combined audio file
+        return jsonify({'audio_url': f'https://audioapi.spandanpokhrel.com.np/get_audio/{combined_audio_path}'})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
